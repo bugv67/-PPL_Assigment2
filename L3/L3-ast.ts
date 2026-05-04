@@ -344,4 +344,5 @@ export const unparseL3 = (exp: Program | Exp): string =>
     isLetExp(exp) ? unparseLetExp(exp) :
     isDefineExp(exp) ? `(define ${exp.var.var} ${unparseL3(exp.val)})` :
     isProgram(exp) ? `(L3 ${unparseLExps(exp.exps)})` :
-    exp;
+   isClassExp(exp) ? `(class (${map((f: VarDecl) => f.var, exp.fields).join(" ")}) (${map((m: Binding) => `(${m.var.var} ${unparseL3(m.val)})`, exp.methods).join(" ")}))` :
+   exp; // defualt
