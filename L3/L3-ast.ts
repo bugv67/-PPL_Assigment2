@@ -61,12 +61,13 @@ export type VarDecl = {tag: "VarDecl"; var: string; }
 export type AppExp = {tag: "AppExp"; rator: CExp; rands: CExp[]; }
 // L2
 export type IfExp = {tag: "IfExp"; test: CExp; then: CExp; alt: CExp; }
-export type ProcExp = {tag: "ProcExp"; args: VarDecl[], body: CExp[]; }
+export type ProcExp = {tag: "ProcExp"; args: VarDecl[], body: CExp[]; } // lamda
 export type Binding = {tag: "Binding"; var: VarDecl; val: CExp; }
 export type LetExp = {tag: "LetExp"; bindings: Binding[]; body: CExp[]; }
 // L3
-export type LitExp = {tag: "LitExp"; val: SExpValue; }
+export type LitExp = {tag: "LitExp"; val: SExpValue; } // pair?
 export type ClassExp ={tag: "ClassExp"; fields: VarDecl[]; methods: Binding[]; } // class in L3, 2a
+// class -> list of fields and list of pairs (name, method body-lambda)
 
 // Type value constructors for disjoint types
 export const makeProgram = (exps: Exp[]): Program => ({tag: "Program", exps: exps});
@@ -236,14 +237,22 @@ const parseProcExp = (vars: Sexp, body: Sexp[]): Result<ProcExp> =>
 
 
 export const parseClassExp = (fields: Sexp, methods: Sexp[]): Result<ClassExp> => {   // class in L3, 2a
+    // map (make,[])- builds the varDecls for the fields
+    // mapv(make,result[])
+    
+    // sexp המקורי שנכנס ל-parseL3Exp
+    //["class", ["x", "y"], [["get-x", ["lambda", [], "x"]], ["get-y", ["lambda", [], "y"]]]]
+    // first= ["x", "y"], rest= [[["get-x", ["lambda", [], "x"]], ["get-y", ["lambda", [], "y"]]]]
+
+
     if (!isArray(fields) || !allT(isIdentifier, fields)) {
         return makeFailure('Empty fields in "class" expression');
     }
-    
+    //methods.length !== 1 ||
     if (!isGoodBindings(methods)) {
         return makeFailure('incorrect methods in "class" expression');
     }
-    const fieldDecls = map(makeVarDecl, fields); // parse the varDecls for the fields
+    const fieldDecls = map(makeVarDecl, fields); // VV  parse the varDecls for the fields
 
     const methodNames = map(b => b[0], methods); // extract method names
     const methodBody= mapResult(parseL3CExp, map(second, methods)); //
