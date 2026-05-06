@@ -155,7 +155,7 @@ export const parseL3CompoundExp = (op: Sexp, params: Sexp[]): Result<Exp> =>
     op === "define"? parseDefine(params) :
     parseL3CompoundCExp(op, params);
 
-// CompoundCExp -> IfExp | ProcExp | LetExp | LitExp | AppExp
+// CompoundCExp -> IfExp | ProcExp | LetExp | LitExp | AppExp | ClassExp  // class in L3, 2a
 export const parseL3CompoundCExp = (op: Sexp, params: Sexp[]): Result<CExp> =>
     isString(op) && isSpecialForm(op) ? parseL3SpecialForm(op, params) :
     parseAppExp(op, params);
@@ -173,7 +173,8 @@ export const parseL3SpecialForm = (op: Sexp, params: Sexp[]): Result<CExp> =>
         isNonEmptyList<Sexp>(params) ? parseLitExp(first(params)) :
         makeFailure(`Bad quote exp: ${params}`) :
     op === "class" ?
-        isNonEmptyList<Sexp>(params) ? parseClassExp(first(params), rest(params)) : // class in L3, 2a
+        params.length === 2 ?
+        parseClassExp(params[0], params[1]) :
         makeFailure(`Bad class: ${params}`) :
     makeFailure("Never");
 
@@ -235,20 +236,23 @@ const parseProcExp = (vars: Sexp, body: Sexp[]): Result<ProcExp> =>
     makeFailure(`Invalid vars for ProcExp ${format(vars)}`);
 
 
-export const parseClassExp = (fields: Sexp, methods: Sexp[]): Result<ClassExp> => {   // class in L3, 2a
+export const parseClassExp = (fields: Sexp, methods: Sexp): Result<ClassExp> => {   // class in L3, 2a
     if (!isArray(fields) || !allT(isIdentifier, fields)) {
         return makeFailure('Empty fields in "class" expression');
     }
     
-    if (!isGoodBindings(methods)) {
+    if (!isArray(methods) || !isGoodBindings(methods)) { //what about empty
         return makeFailure('incorrect methods in "class" expression');
     }
     const fieldDecls = map(makeVarDecl, fields); // parse the varDecls for the fields
 
-    const methodNames = map(b => b[0], methods); // extract method names
-    const methodBody= mapResult(parseL3CExp, map(second, methods)); //
+     // Now TypeScript knows methods is [string, Sexp][]
+    const typedMethods = methods as [string, Sexp][];
 
-    return mapv(methodBody, (methodVals: CExp[]) => {
+    const methodNames = map(b => b[0], typedMethods); // extract method names
+    const methodBodies= mapResult(parseL3CExp, map(second, typedMethods)); //
+
+    return mapv(methodBodies, (methodVals: CExp[]) => {
         // now parse like let exp!
         const methodBindings = zipWith(makeBinding, methodNames, methodVals); // bind the names to the method bodies
         return makeClassExp(fieldDecls, methodBindings); // construct the ClassExp the final boss
@@ -331,6 +335,24 @@ const unparseProcExp = (pe: ProcExp): string =>
 const unparseLetExp = (le: LetExp) : string => 
     `(let (${map((b: Binding) => `(${b.var.var} ${unparseL3(b.val)})`, le.bindings).join(" ")}) ${unparseLExps(le.body)})`
 
+const unparseClassExp = (classExp: ClassExp): string => {
+    //turn the fields into string
+    const fields = classExp.fields
+    //extract the field name
+        .map((f: VarDecl) => f.var)
+        .join(" ");
+
+     //turn the methods into string   
+    const methods = classExp.methods
+        .map((m: Binding) =>
+            // extract the method name, extract and unparse method body
+            `(${m.var.var} ${unparseL3(m.val)})` // building the string
+        )
+        .join(" ");
+
+    return `(class (${fields}) (${methods}))`;
+};
+
 export const unparseL3 = (exp: Program | Exp): string =>
     isBoolExp(exp) ? valueToString(exp.val) :
     isNumExp(exp) ? valueToString(exp.val) :
@@ -344,5 +366,5 @@ export const unparseL3 = (exp: Program | Exp): string =>
     isLetExp(exp) ? unparseLetExp(exp) :
     isDefineExp(exp) ? `(define ${exp.var.var} ${unparseL3(exp.val)})` :
     isProgram(exp) ? `(L3 ${unparseLExps(exp.exps)})` :
-   isClassExp(exp) ? `(class (${map((f: VarDecl) => f.var, exp.fields).join(" ")}) (${map((m: Binding) => `(${m.var.var} ${unparseL3(m.val)})`, exp.methods).join(" ")}))` :
+   isClassExp(exp) ? unparseClassExp(exp) :
    exp; // defualt
