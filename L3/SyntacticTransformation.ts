@@ -1,4 +1,4 @@
-import { ClassExp, ProcExp, Exp, Program, makeClassExp } from "./L3-ast";
+import { ClassExp, ProcExp, Exp, Program, makeClassExp, makeIfExp, IfExp, VarDecl, Binding } from "./L3-ast";
 import { Result, makeFailure } from "../shared/result";
 
 /*
@@ -8,7 +8,16 @@ Type: ClassExp => ProcExp
 */
 export const class2proc = (exp: ClassExp): ProcExp =>
     //@TODO
-//makeClassExp(['a','b'], exp.methods)
+
+
+map(exp.methods, (m:Binding) => m.var.var==msg? makeIfExp( makeEqExp(m.var.var, msg), m.val, makeFailure("Method not found"));
+
+);
+
+const condition=(name:string):IfExp=>{
+    return ;
+}
+
     exp;
 
 
