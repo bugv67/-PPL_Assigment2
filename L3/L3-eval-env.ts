@@ -65,7 +65,9 @@ export const evalSequence = (seq: Exp[], env: Env): Result<Value> =>
     
 const evalCExps = (first: Exp, rest: Exp[], env: Env): Result<Value> =>
     isDefineExp(first) ? evalDefineExps(first, rest, env) :
-    isCExp(first) && isEmpty(rest) ? applicativeEval(first, env) :
+    //if there is only one expression (base case) eval it and return the value 
+    isCExp(first) && isEmpty(rest) ? applicativeEval(first, env) : 
+    // if there are more than one, eval the first and then recursively eval the rest of the sequence in the same env
     isCExp(first) ? bind(applicativeEval(first, env), _ => evalSequence(rest, env)) :
     first;
     
