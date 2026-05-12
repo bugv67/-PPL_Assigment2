@@ -56,16 +56,16 @@ export type NumExp = {tag: "NumExp"; val: number; }
 export type BoolExp = {tag: "BoolExp"; val: boolean; }
 export type StrExp = {tag: "StrExp"; val: string; }
 export type PrimOp = {tag: "PrimOp"; op: string; }
-export type VarRef = {tag: "VarRef"; var: string; }
-export type VarDecl = {tag: "VarDecl"; var: string; }
+export type VarRef = {tag: "VarRef"; var: string; } // reference to a variable x+1
+export type VarDecl = {tag: "VarDecl"; var: string; }  // declaration of a variable: (lambda (x) body) or (define x val)
 export type AppExp = {tag: "AppExp"; rator: CExp; rands: CExp[]; }
 // L2
 export type IfExp = {tag: "IfExp"; test: CExp; then: CExp; alt: CExp; }
 export type ProcExp = {tag: "ProcExp"; args: VarDecl[], body: CExp[]; } // lamda
 export type Binding = {tag: "Binding"; var: VarDecl; val: CExp; }
-export type LetExp = {tag: "LetExp"; bindings: Binding[]; body: CExp[]; }
+export type LetExp = {tag: "LetExp"; bindings: Binding[]; body: CExp[]; } // scop
 // L3
-export type LitExp = {tag: "LitExp"; val: SExpValue; } // pair?
+export type LitExp = {tag: "LitExp"; val: SExpValue; } // primitive literal expression - 1 #t, #f, 1, "a", 'a, '(1 2)
 export type ClassExp ={tag: "ClassExp"; fields: VarDecl[]; methods: Binding[]; } // class in L3, 2a
 // class -> list of fields and list of pairs (name, method body-lambda)
 
