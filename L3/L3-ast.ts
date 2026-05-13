@@ -58,11 +58,11 @@ export type StrExp = {tag: "StrExp"; val: string; }
 export type PrimOp = {tag: "PrimOp"; op: string; }
 export type VarRef = {tag: "VarRef"; var: string; }
 export type VarDecl = {tag: "VarDecl"; var: string; }
-export type AppExp = {tag: "AppExp"; rator: CExp; rands: CExp[]; }
+export type AppExp = {tag: "AppExp"; rator: CExp; rands: CExp[]; } // (lamda)
 // L2
 export type IfExp = {tag: "IfExp"; test: CExp; then: CExp; alt: CExp; }
 export type ProcExp = {tag: "ProcExp"; args: VarDecl[], body: CExp[]; } // lamda
-export type Binding = {tag: "Binding"; var: VarDecl; val: CExp; }
+export type Binding = {tag: "Binding"; var: VarDecl; val: CExp; }  // (var, val)
 export type LetExp = {tag: "LetExp"; bindings: Binding[]; body: CExp[]; }
 // L3
 export type LitExp = {tag: "LitExp"; val: SExpValue; } // pair?
