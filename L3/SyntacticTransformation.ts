@@ -18,6 +18,7 @@ export const class2proc = (exp: ClassExp): ProcExp => {
     name: method.var.var,
     // Cast method.val to ProcExp so we can access its body
     value: (method.val as ProcExp).body[0] 
+    // last line - value: (method.val as ProcExp).body.at(-1)!
 }));
 
     // for each case create an if statement that checks if the message is the name of the method,
@@ -48,7 +49,10 @@ Type: [Exp | Program] => Result<Exp | Program>
 */
 
 export const transform = (exp: Exp | Program): Result<Exp | Program> => {
-    if (isClassExp(exp)) {
+    if (isClassExp(exp)) { // can a class has a class inside it?
+        /*if (isClassExp(exp)) {
+    return transform(class2proc(exp)); // רקורסיה על ה-ProcExp שנוצר
+}  */
         return makeOk(class2proc(exp));
     }
 
