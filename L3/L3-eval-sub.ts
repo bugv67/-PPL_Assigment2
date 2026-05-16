@@ -20,7 +20,12 @@ import { format } from "../shared/format";
 
 // ========================================================
 // Eval functions
+//need to eval an exp -> class exp ->L3applicativeEval
+// if we build one: above & app -> l3applyprocedure? -> class is compound -> applyclass (with env- args)
+// if we call a method: above & app -> l3applyprocedure -> applyObj -> applymethod?  with env of the class
+// confused...
 
+// add support in class + object? inside a class theres and object
 const L3applicativeEval = (exp: CExp, env: Env): Result<Value> =>
     isNumExp(exp) ? makeOk(exp.val) : 
     isBoolExp(exp) ? makeOk(exp.val) :

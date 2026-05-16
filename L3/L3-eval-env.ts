@@ -16,7 +16,12 @@ import { format } from "../shared/format";
 
 // ========================================================
 // Eval functions
+//need to eval an exp -> class exp ->L3applicativeEval
+// if we build one: above & app -> l3applyprocedure? -> class is compound -> applyclass (with env- args)
+// if we call a method: above & app -> l3applyprocedure -> applyObj -> applymethod?  with env of the class
+// confused...
 
+//add supprt in class + object? inside a class theres and object
 const applicativeEval = (exp: CExp, env: Env): Result<Value> =>
     isNumExp(exp) ? makeOk(exp.val) :
     isBoolExp(exp) ? makeOk(exp.val) :
@@ -48,6 +53,7 @@ const evalProc = (exp: ProcExp, env: Env): Result<Closure> =>
 
 // KEY: This procedure does NOT have an env parameter.
 //      Instead we use the env of the closure.
+// add support for class
 const applyProcedure = (proc: Value, args: Value[]): Result<Value> =>
     isPrimOp(proc) ? applyPrimitive(proc, args) :
     isClosure(proc) ? applyClosure(proc, args) :

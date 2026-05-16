@@ -25,7 +25,7 @@ export const class2proc = (exp: ClassExp): ProcExp => {
     // and if so returns the body of the method 
     const ifStatements = methodDictionary.reduceRight<CExp>(
         (acc: CExp, entry): CExp =>
-            makeIfExp(
+            makeIfExp(  // (eq? msg "methodName")
                 makeAppExp(makePrimOp("eq?"), [
                     msgRef,
                     makeLitExp(makeSymbolSExp(entry.name))
