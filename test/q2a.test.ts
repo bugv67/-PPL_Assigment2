@@ -3,7 +3,7 @@ import { makeOk, bind, isFailure } from '../shared/result';
 import { parse as p } from "../shared/parser";
 
 
-
+// to run tests: npm test -- test/q2a.test.ts
 describe('Q2A Tests', () => {
      it('test parse/unparse class', () => {
           expect(bind(bind(p(`
