@@ -81,26 +81,26 @@ const primOp2Python = (op: string, rands: Exp[]): Result<string> => {
         return bind(randsRes, (rands: string[]) => makeOk(`(${rands.join(` ${op} `)})`));
     } else if (op === "and") {
         const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(${rands.join(" & ")})`));
+        return bind(randsRes, (rands: string[]) => makeOk(`(${rands.join(" and ")})`));
     } else if (op === "or") {
         const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(${rands.join(" | ")})`));
+        return bind(randsRes, (rands: string[]) => makeOk(`(${rands.join(" or ")})`));
     } else if (op === "not") {
         const randsRes = mapResult(l2ToPython, rands);
         return bind(randsRes, (rands: string[]) => makeOk(`(not ${rands[0]})`));
     } else if (op === '=') {
         const randsRes = mapResult(l2ToPython, rands);
         return bind(randsRes, (rands: string[]) => makeOk(`(${rands[0]} == ${rands[1]})`));
-    } else if (op === "eq?") {
-        // in L2, eq? has no semantic. TODO
-        const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(${rands[0]} == ${rands[1]})`));
+    // } else if (op === "eq?") {
+    //     // in L2, eq? has no semantic. TODO
+    //     const randsRes = mapResult(l2ToPython, rands);
+    //     return bind(randsRes, (rands: string[]) => makeOk(`(${rands[0]} == ${rands[1]})`));
     } else if (op === "boolean?") {
         const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(lambda ${rands[0]} : (type (${rands[0]}) == bool))`));
+        return bind(randsRes, (rands: string[]) => makeOk(`(lambda a : (type (a) == bool))(${rands[0]})`));
     } else if (op === "number?") {
         const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(lambda ${rands[0]} : (type (${rands[0]}) == int))`));
+        return bind(randsRes, (rands: string[]) => makeOk(`(lambda a : (type (a) == int))(${rands[0]})`));
     } else {
         return makeFailure(`Unknown primitive operator: ${op}`);
     }

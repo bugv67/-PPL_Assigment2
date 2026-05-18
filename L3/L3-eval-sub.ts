@@ -42,7 +42,7 @@ const L3applicativeEval = (exp: CExp, env: Env): Result<Value> =>
                             (rands: Value[]) =>
                                 L3applyProcedure(rator, rands, env))) :
     isLetExp(exp) ? makeFailure('"let" not supported (yet)') :
-    // isClassExp(exp) ? evalClass(exp, env) :    //2b
+    isClassExp(exp) ? evalClass(exp, env) :    //2b
     makeFailure('Never');
 
 export const isTrueValue = (x: Value): boolean =>
@@ -56,7 +56,15 @@ const evalIf = (exp: IfExp, env: Env): Result<Value> =>
 const evalProc = (exp: ProcExp, env: Env): Result<Closure> =>
     makeOk(makeClosure(exp.args, exp.body));
 
-// const evalClass = (exp : ClassExp, env: Env): Result<Value> => {
+const evalClass = (exp : ClassExp, env: Env): Result<Value> => {
+    bind(mapResult(field => L3applicativeEval(field.var, env), exp.fields), (fields: Value[]) =>
+        
+   
+   
+    L3applicativeEval(exp.fields, env);
+    L3applicativeEval(exp.methods, env);
+
+}
 
 
 const L3applyProcedure = (proc: Value, args: Value[], env: Env): Result<Value> =>
