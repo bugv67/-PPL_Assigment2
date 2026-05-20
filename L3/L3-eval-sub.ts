@@ -1,5 +1,5 @@
 // L3-eval.ts
-import { map } from "ramda";
+import { concat, is, map } from "ramda";
 import { ClassExp, isCExp, isClassExp, isLetExp } from "./L3-ast";
 import { BoolExp, CExp, Exp, IfExp, LitExp, NumExp,
          PrimOp, ProcExp, Program, StrExp, VarDecl } from "./L3-ast";
@@ -8,8 +8,8 @@ import { isAppExp, isBoolExp, isDefineExp, isIfExp, isLitExp, isNumExp,
 import { makeBoolExp, makeLitExp, makeNumExp, makeProcExp, makeStrExp } from "./L3-ast";
 import { parseL3Exp } from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeEnv, Env } from "./L3-env-sub";
-import { isClosure, makeClosure, Closure, Value, makeClass, Class } from "./L3-value";
-import { first, rest, isEmpty, List, isNonEmptyList } from '../shared/list';
+import { isClosure, makeClosure, Closure, Value, makeClass, ClassValue, isClass, makeObject, ObjectValue, isObject, isSymbolSExp } from "./L3-value";
+import { first, rest, isEmpty, List, isNonEmptyList, cons } from '../shared/list';
 import { isBoolean, isNumber, isString } from "../shared/type-predicates";
 import { Result, makeOk, makeFailure, bind, mapResult, mapv } from "../shared/result";
 import { renameExps, substitute } from "./substitute";
@@ -56,12 +56,14 @@ const evalIf = (exp: IfExp, env: Env): Result<Value> =>
 const evalProc = (exp: ProcExp, env: Env): Result<Closure> =>
     makeOk(makeClosure(exp.args, exp.body));
 
-const evalClass = (exp : ClassExp, env: Env): Result<Class> => 
+const evalClass = (exp : ClassExp, env: Env): Result<ClassValue> => 
     makeOk(makeClass(exp.fields, exp.methods));
   
 const L3applyProcedure = (proc: Value, args: Value[], env: Env): Result<Value> =>
     isPrimOp(proc) ? applyPrimitive(proc, args) :
     isClosure(proc) ? applyClosure(proc, args, env) :
+    isClass(proc) ? applyClass(proc, args, env) :
+    isObject(proc) ? applyMethod(proc, args, env) :
     makeFailure(`Bad procedure ${format(proc)}`);
 
 // Applications are computed by substituting computed
@@ -82,6 +84,57 @@ const applyClosure = (proc: Closure, args: Value[], env: Env): Result<Value> => 
     const litArgs : CExp[] = map(valueToLitExp, args);
     return evalSequence(substitute(body, vars, litArgs), env);
     //return evalSequence(substitute(proc.body, vars, litArgs), env);
+}
+
+const applyClass = (cls: ClassValue, args: Value[], env: Env): Result<ObjectValue> => {
+    // making an object instance
+    if (args.length !== cls.fields.length) {
+        return makeFailure("number of arguments doesnt match constructor");
+    }
+    return makeOk(makeObject(cls, args));
+}
+
+const applyMethod = (obj: ObjectValue, args: Value[], env: Env): Result<Value> => {
+
+    if (args.length === 0 || args.length > 2 || !isSymbolSExp(args[0])) {
+        return makeFailure("must have a method and name must be a symbol");
+    }
+    
+    const methodName = args[0].val;
+    
+    const methodBinding = obj.class.methods.find(b => b.var.var === methodName);
+    if (!methodBinding) {
+        return makeFailure(`Unrecognized method: ${methodName}`);
+    }
+    
+    return bind(L3applicativeEval(methodBinding.val, env), (proc: Value) => {
+        if (!isClosure(proc)) {
+            return makeFailure(`Method ${methodName} is not a procedure`);
+        }
+        
+        // [a,b]
+        const fieldVars = map((v: VarDecl) => v.var, obj.class.fields);
+        // the actual field values of the instance [5,7]
+        const fieldLitArgs = map(valueToLitExp, obj.fields);
+        
+        //the name of the method parameters [k]
+        const methodVars = map((v: VarDecl) => v.var, proc.params);
+        // the values of the method parameters in the method call [2]
+        const methodLitArgs = map(valueToLitExp, args.slice(1));
+        
+        // if (methodLitArgs.length !== methodVars.length) {
+        //     return makeFailure(`Wrong number of arguments to method ${methodName}. Expected ${methodVars.length}, got ${methodLitArgs.length}`);
+        // } checked in applyClass??
+        
+        //one big array
+        // [a,b,k] 
+        const allVars = concat(fieldVars, methodVars);
+        // [5,7,2]
+        const allLitArgs = concat(fieldLitArgs, methodLitArgs);
+        
+        const body = renameExps(proc.body);
+        return evalSequence(substitute(body, allVars, allLitArgs), env);
+    });
 }
 
 // Evaluate a sequence of expressions (in a program)

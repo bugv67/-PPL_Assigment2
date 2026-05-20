@@ -27,15 +27,15 @@ export const makeClosureEnv = (params: VarDecl[], body: CExp[], env: Env): Closu
     ({tag: "Closure", params: params, body: body, env: env});
 export const isClosure = (x: any): x is Closure => x.tag === "Closure";
 
-export const makeClass = (fields: VarDecl[], methods: Binding[]): Class =>
+export const makeClass = (fields: VarDecl[], methods: Binding[]): ClassValue =>
     ({tag: "Class", fields: fields, methods: methods, env: makeEmptyEnv()});
 
-export const isClass = (x: any): x is Class => x.tag === "Class";
+export const isClass = (x: any): x is ClassValue => x.tag === "Class";
 
-export const makeObject = (cls: Class, fieldVals: Value[]): Object =>
-    ({tag: "Obj", class: cls, fields: fieldVals, env: makeEmptyEnv()});
+export const makeObject = (cls: ClassValue, fieldVals: Value[]): ObjectValue =>
+    ({tag: "Obj", class: cls, fields: fieldVals, methods: [], env: makeEmptyEnv()});
 
-export const isObject = (x: any): x is Object => x.tag === "Obj";
+export const isObject = (x: any): x is ObjectValue => x.tag === "Obj";
 
 // ========================================================
 // SExp
@@ -52,23 +52,23 @@ export type SymbolSExp = {
     val: string;
 }
 
-export type Class = {
+export type ClassValue = {
     tag: "Class";
     fields: VarDecl[];
     methods: Binding[]; 
     env: Env;
 }
 
-export type Object = {
+export type ObjectValue = {
     tag: "Obj";
-    class: Class;
+    class: ClassValue;
     fields: Value[];
     methods: Closure[]; //closures for the methods with the fields
     env: Env;
 
 }
 
-export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp | Class | Object;
+export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp | ClassValue | ObjectValue;
 export const isSExp = (x: any): x is SExpValue =>
     typeof(x) === 'string' || typeof(x) === 'boolean' || typeof(x) === 'number' ||
     isSymbolSExp(x) || isCompoundSExp(x) || isEmptySExp(x) || isPrimOp(x) || isClosure(x);
