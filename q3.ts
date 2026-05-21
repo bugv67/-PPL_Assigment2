@@ -30,7 +30,20 @@ export const l2ToPython = (exp: Exp | Program): Result<string> => {
                     return makeOk(`"${(exp as StrExp).val}"`);
                 }
                 if (isPrimOp(exp)) {
-                    return makeOk(`"${(exp as PrimOp).op}"`);
+                    const op = exp.op;
+                    if (op === "+") return makeOk("(lambda x, y : (x + y))");
+                    if (op === "-") return makeOk("(lambda x, y : (x - y))");
+                    if (op === "*") return makeOk("(lambda x, y : (x * y))");
+                    if (op === "/") return makeOk("(lambda x, y : (x / y))");
+                    if (op === ">") return makeOk("(lambda x, y : (x > y))");
+                    if (op === "<") return makeOk("(lambda x, y : (x < y))");
+                    if (op === "=" || op === "eq?") return makeOk("(lambda x, y : (x == y))");
+                    if (op === "and") return makeOk("(lambda x, y : (x and y))");
+                    if (op === "or") return makeOk("(lambda x, y : (x or y))");
+                    if (op === "not") return makeOk("(lambda x : (not x))");
+                    if (op === "boolean?") return makeOk("(lambda x : (type(x) == bool))");
+                    if (op === "number?") return makeOk("(lambda x : (type(x) == int or type(x) == float))");
+                    return makeFailure(`Unknown primitive operator: ${op}`);
                 }
                 if (isVarRef(exp)) {
                     return makeOk((exp as VarRef).var);
@@ -41,13 +54,15 @@ export const l2ToPython = (exp: Exp | Program): Result<string> => {
                 if (isAppExp(exp)) {
                     if (isPrimOp(exp.rator)) {
                         return primOp2Python(exp.rator.op, exp.rands);
+                    } else {
+                        // this transforms closures
+                        const ratorRes = l2ToPython(exp.rator);
+                        const randsRes = mapResult(l2ToPython, exp.rands);
+                        return bind(ratorRes, (rator: string) =>
+                            bind(randsRes, (rands: string[]) =>
+                                makeOk(`${rator}(${rands.join(",")})`)));
                     }
-                    // this transforms closures
-                    const ratorRes = l2ToPython(exp.rator);
-                    const randsRes = mapResult(l2ToPython, exp.rands);
-                    return bind(ratorRes, (rator: string) =>
-                        bind(randsRes, (rands: string[]) =>
-                            makeOk(`${rator}(${rands.join(",")})`)));
+
                 }
                 if (isIfExp(exp)) {
                     const testRes = l2ToPython(exp.test);
@@ -75,34 +90,27 @@ export const l2ToPython = (exp: Exp | Program): Result<string> => {
 }
 
 const primOp2Python = (op: string, rands: Exp[]): Result<string> => {
-    // cases where you switch between operator and first operand
-    if (op === "+" || op === "-" || op === "*" || op === "/" || op === ">" || op === "<") {
-        const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(${rands.join(` ${op} `)})`));
-    } else if (op === "and") {
-        const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(${rands.join(" and ")})`));
-    } else if (op === "or") {
-        const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(${rands.join(" or ")})`));
-    } else if (op === "not") {
-        const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(not ${rands[0]})`));
-    } else if (op === '=') {
-        const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(${rands[0]} == ${rands[1]})`));
-    // } else if (op === "eq?") {
-    //     // in L2, eq? has no semantic. TODO
-    //     const randsRes = mapResult(l2ToPython, rands);
-    //     return bind(randsRes, (rands: string[]) => makeOk(`(${rands[0]} == ${rands[1]})`));
-    } else if (op === "boolean?") {
-        const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(lambda a : (type (a) == bool))(${rands[0]})`));
-    } else if (op === "number?") {
-        const randsRes = mapResult(l2ToPython, rands);
-        return bind(randsRes, (rands: string[]) => makeOk(`(lambda a : (type (a) == int))(${rands[0]})`));
-    } else {
-        return makeFailure(`Unknown primitive operator: ${op}`);
-    }
+    const randsRes = mapResult(l2ToPython, rands);
+    return bind(randsRes, (randsStr: string[]) => {
+        if (op === "+" || op === "-" || op === "*" || op === "/" || op === ">" || op === "<") {
+            return makeOk(`(${randsStr.join(` ${op} `)})`);
+        }
+        if (op === "and" || op === "or") {
+            return makeOk(`(${randsStr.join(` ${op} `)})`);
+        }
+        if (op === "not") {
+            return makeOk(`(not ${randsStr[0]})`);
+        }
+        if (op === '=' || op === "eq?") {
+            return makeOk(`(${randsStr[0]} == ${randsStr[1]})`);
+        }
+        if (op === "boolean?") {
+            return makeOk(`(lambda x : (type(x) == bool))(${randsStr[0]})`);
+        }
+        if (op === "number?") {
+            return makeOk(`(lambda x : (type(x) == int or type(x) == float))(${randsStr[0]})`);
+        }
+        return makeFailure(`Unknown primitive operator application: ${op}`);
+    });
 }
 
