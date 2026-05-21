@@ -57,7 +57,7 @@ const evalProc = (exp: ProcExp, env: Env): Result<Closure> =>
     makeOk(makeClosure(exp.args, exp.body));
 
 const evalClass = (exp : ClassExp, env: Env): Result<ClassValue> => 
-    makeOk(makeClass(exp.fields, exp.methods));
+    makeOk(makeClass(exp.fields, exp.methods , makeEmptyEnv()));
   /* const evalClass = (exp: ClassExp, exp: Env): Result<ClassValue> =>  // 2b
     makeOk(makeClass(exp.fields, exp.methods, makeEmptyEnv()));
    */

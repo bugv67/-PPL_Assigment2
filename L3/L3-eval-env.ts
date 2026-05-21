@@ -9,7 +9,7 @@ import { isBoolExp, isCExp, isLitExp, isNumExp, isPrimOp, isStrExp, isVarRef,
          ClassExp,
          isClassExp} from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeExtEnv, Env } from "./L3-env-env";
-import { isClosure, makeClosureEnv, Closure, Value, ClassValue, makeClass } from "./L3-value";
+import { isClosure, makeClosureEnv, Closure, Value, makeClass, ClassValue, isClass, isObject, ObjectValue, makeObject } from "./L3-value";
 import { applyPrimitive } from "./evalPrimitive";
 import { allT, first, rest, isEmpty, isNonEmptyList } from "../shared/list";
 import { Result, makeOk, makeFailure, bind, mapResult } from "../shared/result";
@@ -40,7 +40,7 @@ const applicativeEval = (exp: CExp, env: Env): Result<Value> =>
                         bind(mapResult((rand: CExp) => 
                            applicativeEval(rand, env), exp.rands),
                               (args: Value[]) =>
-                                 applyProcedure(proc, args))) :
+                                 applyProcedure(proc, args,env))) : //2b
     makeFailure('"let" not supported (yet)');
 
 export const isTrueValue = (x: Value): boolean =>
@@ -54,18 +54,31 @@ const evalIf = (exp: IfExp, env: Env): Result<Value> =>
 const evalProc = (exp: ProcExp, env: Env): Result<Closure> =>
     makeOk(makeClosureEnv(exp.args, exp.body, env));
 
-const evalClass = (exp: ClassExp, env: Env): Result<ClassValue> => // 2b
+const evalClass = (exp: ClassExp, env: Env): Result<ClassValue> =>  // 2b
     makeOk(makeClass(exp.fields, exp.methods, env));
 
 // KEY: This procedure does NOT have an env parameter.
 //      Instead we use the env of the closure.
 // add support for class
-const applyProcedure = (proc: Value, args: Value[]): Result<Value> =>
+const applyProcedure = (proc: Value, args: Value[],env:Env): Result<Value> =>
     isPrimOp(proc) ? applyPrimitive(proc, args) :
-    isClosure(proc) ? applyClosure(proc, args) :
+    isClosure(proc) ? applyClosure(proc, args, env) : //2b
+    isClass(proc) ? applyClass(proc, args, env) :    
+    isObject(proc) ? applyMethod(proc, args, env) :
     makeFailure(`Bad procedure ${format(proc)}`);
 
-const applyClosure = (proc: Closure, args: Value[]): Result<Value> => {
+   
+const applyClass = (cls: ClassValue, args: Value[], env: Env): Result<ObjectValue> => { //2b
+    if (args.length !== cls.fields.length) {
+        return makeFailure("number of arguments doesn't match constructor");
+    }
+    return makeOk(makeObject(cls, args));
+}
+const applyMethod = (obj: ObjectValue, args: Value[], env: Env): Result<Value> => { // 2b
+    return makeFailure("Method application not implemented yet");
+}
+
+const applyClosure = (proc: Closure, args: Value[],env: Env): Result<Value> => {
     const vars = map((v: VarDecl) => v.var, proc.params);
     return evalSequence(proc.body, makeExtEnv(vars, args, proc.env));
 }
