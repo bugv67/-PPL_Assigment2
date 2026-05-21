@@ -29,7 +29,10 @@ export const isClosure = (x: any): x is Closure => x.tag === "Closure";
 
 export const makeClass = (fields: VarDecl[], methods: Binding[]): ClassValue =>
     ({tag: "Class", fields: fields, methods: methods, env: makeEmptyEnv()});
-
+/* one consructor for class 
+export const makeClass = (fields: VarDecl[], methods: Binding[], env: Env): ClassValue =>
+    ({ tag: "Class", fields: fields, methods: methods, env: env });
+*/
 export const isClass = (x: any): x is ClassValue => x.tag === "Class";
 
 export const makeObject = (cls: ClassValue, fieldVals: Value[]): ObjectValue =>
