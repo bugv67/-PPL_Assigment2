@@ -96,6 +96,7 @@ const applyClass = (cls: ClassValue, args: Value[], env: Env): Result<ObjectValu
     return makeOk(makeObject(cls, args));
 }
 
+//apply a method of an object: find the method in the class, substitute and evaluate the body
 const applyMethod = (obj: ObjectValue, args: Value[], env: Env): Result<Value> => {
 
     if (args.length === 0 || args.length > 2 || !isSymbolSExp(args[0])) {
