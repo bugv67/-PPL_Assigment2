@@ -40,7 +40,7 @@ const applicativeEval = (exp: CExp, env: Env): Result<Value> =>
                         bind(mapResult((rand: CExp) => 
                            applicativeEval(rand, env), exp.rands),
                               (args: Value[]) =>
-                                 applyProcedure(proc, args,env))) : //2b
+                                 applyProcedure(proc, args))) : //2b
     makeFailure('"let" not supported (yet)');
 
 export const isTrueValue = (x: Value): boolean =>
@@ -60,25 +60,25 @@ const evalClass = (exp: ClassExp, env: Env): Result<ClassValue> =>  // 2b
 // KEY: This procedure does NOT have an env parameter.
 //      Instead we use the env of the closure.
 // add support for class
-const applyProcedure = (proc: Value, args: Value[],env:Env): Result<Value> =>
+const applyProcedure = (proc: Value, args: Value[]): Result<Value> =>
     isPrimOp(proc) ? applyPrimitive(proc, args) :
-    isClosure(proc) ? applyClosure(proc, args, env) : //2b
-    isClass(proc) ? applyClass(proc, args, env) :    
-    isObject(proc) ? applyMethod(proc, args, env) :
+    isClosure(proc) ? applyClosure(proc, args) :
+    isClass(proc) ? applyClass(proc, args) :    
+    isObject(proc) ? applyMethod(proc, args) :
     makeFailure(`Bad procedure ${format(proc)}`);
 
    
-const applyClass = (cls: ClassValue, args: Value[], env: Env): Result<ObjectValue> => { //2b
+const applyClass = (cls: ClassValue, args: Value[]): Result<ObjectValue> => { //2b
     if (args.length !== cls.fields.length) {
         return makeFailure("number of arguments doesn't match constructor");
     }
     return makeOk(makeObject(cls, args));
 }
-const applyMethod = (obj: ObjectValue, args: Value[], env: Env): Result<Value> => { // 2b
+const applyMethod = (obj: ObjectValue, args: Value[]): Result<Value> => { // 2b
     return makeFailure("Method application not implemented yet");
 }
 
-const applyClosure = (proc: Closure, args: Value[],env: Env): Result<Value> => {
+const applyClosure = (proc: Closure, args: Value[]): Result<Value> => {
     const vars = map((v: VarDecl) => v.var, proc.params);
     return evalSequence(proc.body, makeExtEnv(vars, args, proc.env));
 }
