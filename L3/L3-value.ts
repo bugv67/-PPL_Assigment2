@@ -39,6 +39,9 @@ export const isClass = (x: any): x is ClassValue => x.tag === "Class";
 export const makeObject = (cls: ClassValue, fieldVals: Value[]): ObjectValue =>
     ({tag: "Obj", class: cls, fields: fieldVals, methods: [], env: makeEmptyEnv()});
 
+export const makeObjectEnv = (cls: ClassValue, fieldvals: Value[], env: Env): ObjectValue  =>
+    ({tag: "Obj", class: cls, fields: fieldvals, methods: [], env: env});
+
 export const isObject = (x: any): x is ObjectValue => x.tag === "Obj";
 
 // ========================================================

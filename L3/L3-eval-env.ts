@@ -11,7 +11,7 @@ import {
     isClassExp
 } from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeExtEnv, Env } from "./L3-env-env";
-import { isClosure, makeClosureEnv, Closure, Value, makeClass, ClassValue, isClass, isObject, ObjectValue, makeObject, isSymbolSExp } from "./L3-value";
+import { isClosure, makeClosureEnv, Closure, Value, makeClass, ClassValue, isClass, isObject, ObjectValue, makeObject, isSymbolSExp, makeObjectEnv } from "./L3-value";
 import { applyPrimitive } from "./evalPrimitive";
 import { allT, first, rest, isEmpty, isNonEmptyList } from "../shared/list";
 import { Result, makeOk, makeFailure, bind, mapResult } from "../shared/result";
@@ -74,7 +74,7 @@ const applyClass = (cls: ClassValue, args: Value[]): Result<ObjectValue> => { //
     if (args.length !== cls.fields.length) {
         return makeFailure("number of arguments doesn't match constructor");
     }
-    return makeOk(makeObject(cls, args));
+    return makeOk(makeObjectEnv(cls, args, cls.env));
 }
 const applyMethod = (obj: ObjectValue, args: Value[]): Result<Value> => {
     if (args.length === 0 || !isSymbolSExp(args[0])) {

@@ -99,7 +99,7 @@ const applyClass = (cls: ClassValue, args: Value[], env: Env): Result<ObjectValu
 //apply a method of an object: find the method in the class, substitute and evaluate the body
 const applyMethod = (obj: ObjectValue, args: Value[], env: Env): Result<Value> => {
 
-    if (args.length === 0 || args.length > 2 || !isSymbolSExp(args[0])) {
+    if (args.length === 0 || !isSymbolSExp(args[0])) {
         return makeFailure("must have a method and name must be a symbol");
     }
     
@@ -130,10 +130,10 @@ const applyMethod = (obj: ObjectValue, args: Value[], env: Env): Result<Value> =
         } 
         
         //one big array
-        // [a,b,k] 
-        const allVars = concat(fieldVars, methodVars);
-        // [5,7,2]
-        const allLitArgs = concat(fieldLitArgs, methodLitArgs);
+        // [k,a,b] 
+        const allVars = concat( methodVars, fieldVars);
+        // [2,5,7]
+        const allLitArgs = concat(methodLitArgs, fieldLitArgs);
         
         const body = renameExps(proc.body);
         return evalSequence(substitute(body, allVars, allLitArgs), env);
