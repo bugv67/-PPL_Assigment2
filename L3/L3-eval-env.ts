@@ -101,9 +101,9 @@ const applyMethod = (obj: ObjectValue, args: Value[]): Result<Value> => {
     const methodValues: Value[] = args.slice(1); // Strip away the method name symbol  [2]
 
    
-    // if (methodValues.length !== methodVars.length) {
-    //     return makeFailure(`Wrong number of arguments to method ${methodName}. Expected ${methodVars.length}, got ${methodValues.length}`);
-    // }
+    if (methodValues.length !== methodVars.length) {
+        return makeFailure(`Wrong number of arguments to method ${methodName}. Expected ${methodVars.length}, got ${methodValues.length}`);
+    }
 
 
     // extend the object's definition environment with its instance field values

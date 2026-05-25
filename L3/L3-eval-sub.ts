@@ -125,9 +125,9 @@ const applyMethod = (obj: ObjectValue, args: Value[], env: Env): Result<Value> =
         // the values of the method parameters in the method call [2]
         const methodLitArgs = map(valueToLitExp, args.slice(1));
         
-        // if (methodLitArgs.length !== methodVars.length) {
-        //     return makeFailure(`Wrong number of arguments to method ${methodName}. Expected ${methodVars.length}, got ${methodLitArgs.length}`);
-        // } checked in applyClass??
+        if (methodLitArgs.length !== methodVars.length) {
+            return makeFailure(`Wrong number of arguments to method ${methodName}. Expected ${methodVars.length}, got ${methodLitArgs.length}`);
+        } 
         
         //one big array
         // [a,b,k] 
